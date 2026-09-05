@@ -34,3 +34,18 @@ def clean_data(df: pd.DataFrame) -> pd.DataFrame:
     df = df.set_index("EmployeeNumber").drop(columns=cols_to_drop)
 
     return df
+
+
+def recode_target(df: pd.DataFrame) -> pd.DataFrame:
+    """
+    Recode Attrition from Yes/No to a binary target variable.
+
+    Args:
+        df: cleaned DataFrame
+    Returns:
+        DataFrame with AttritionNum (0/1) replacing Attrition
+    """
+    df = df.copy()
+    df["AttritionNum"] = (df["Attrition"] == "Yes").astype(int)
+
+    return df.drop(columns=["Attrition"])
