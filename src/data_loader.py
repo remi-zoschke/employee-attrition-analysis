@@ -49,3 +49,94 @@ def recode_target(df: pd.DataFrame) -> pd.DataFrame:
     df["AttritionNum"] = (df["Attrition"] == "Yes").astype(int)
 
     return df.drop(columns=["Attrition"])
+
+
+def engineer_features(df: pd.DataFrame) -> pd.DataFrame:
+    """
+     Create new features and recode existing variables for analysis.
+
+    Args:
+        df: cleaned DataFrame
+    Returns:
+        DataFrame with engineered features
+    """
+    df["AgeGroup"] = pd.cut(
+        df["Age"],
+        bins=[18, 25, 35, 45, 60],
+        labels=["18-25", "26-35", "36-45", "46-60"],
+    )
+
+    df["TenureGroup"] = pd.cut(
+        df["YearsAtCompany"],
+        bins=[-1, 2, 10, 40],
+        labels=["0-2 ans", "3-10 ans", "11+ ans"],
+    )
+
+    df["EducationField"] = df["EducationField"].replace("Human Resources", "Other")
+
+    df["IncomeGroup"] = pd.cut(
+        df["MonthlyIncome"],
+        bins=[1000, 3000, 5000, 8500, 20000],
+        labels=["Bas", "Moyen", "Élevé", "Très élevé"],
+    )
+
+    df["StockOptionGroup"] = df["StockOptionLevel"].map(
+        {0: "0", 1: "1", 2: "2+", 3: "2+"}
+    )
+
+    df["ManagerTenureGroup"] = pd.cut(
+        df["YearsWithCurrManager"],
+        bins=[-1, 0, 3, 17],
+        labels=["0", "1-3 ans", "4+ ans"],
+    )
+
+    return df
+
+
+def reorder_columns(df: pd.DataFrame) -> pd.DataFrame:
+    """
+    Reorder columns for readability: target first, then raw variables,
+    then derived/grouped variables placed next to their source.
+
+    Args:
+        df: DataFrame with engineered features
+    Returns:
+        DataFrame with reordered columns
+    """
+    column_order = [
+        "AttritionNum",
+        "Age",
+        "AgeGroup",
+        "Gender",
+        "MaritalStatus",
+        "Education",
+        "EducationField",
+        "Department",
+        "JobRole",
+        "JobLevel",
+        "BusinessTravel",
+        "DistanceFromHome",
+        "MonthlyIncome",
+        "IncomeGroup",
+        "PercentSalaryHike",
+        "StockOptionLevel",
+        "StockOptionGroup",
+        "OverTime",
+        "TotalWorkingYears",
+        "YearsAtCompany",
+        "TenureGroup",
+        "YearsInCurrentRole",
+        "YearsSinceLastPromotion",
+        "YearsWithCurrManager",
+        "ManagerTenureGroup",
+        "NumCompaniesWorked",
+        "TrainingTimesLastYear",
+        "EnvironmentSatisfaction",
+        "JobSatisfaction",
+        "JobInvolvement",
+        "WorkLifeBalance",
+        "RelationshipSatisfaction",
+        "PerformanceRating",
+    ]
+
+    return df[column_order]
