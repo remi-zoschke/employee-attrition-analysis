@@ -1,0 +1,23 @@
+# PYTHON
+__pycache__/
+*.py[cod]
+
+# VIRTUAL ENVIRONMENT
+.venv/
+
+# DATA
+data/raw/*.csv
+!data/raw/.gitkeep
+!data/processed/.gitkeep
+
+# QUARTO
+/.quarto/
+*.ipynb
+**/*.quarto_ipynb
+
+# OUTPUT
+output/
+!output/.gitkeep
+
+# FREEZE
+_freeze/
