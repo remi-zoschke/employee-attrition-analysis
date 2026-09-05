@@ -140,3 +140,26 @@ def reorder_columns(df: pd.DataFrame) -> pd.DataFrame:
     ]
 
     return df[column_order]
+
+
+def save_processed(df: pd.DataFrame, path: str) -> None:
+    """
+    Save the fully processed DataFrame to Parquet format.
+
+    Args:
+        df: processed DataFrame
+        path: output path
+    """
+    df.to_parquet(path, index=True)
+
+
+def load_processed(path: str) -> pd.DataFrame:
+    """
+    Load the processed dataset from Parquet.
+
+    Args:
+        path: path to the parquet file
+    Returns:
+        Processed DataFrame
+    """
+    return pd.read_parquet(path)
