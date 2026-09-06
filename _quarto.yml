@@ -1,0 +1,23 @@
+language:
+  title-block-author-single: "Auteur"
+
+project:
+  type: default
+  output-dir: output
+
+format:
+  html:
+    theme: cosmo
+    lang: fr
+    toc: true
+    toc-depth: 3
+    toc-location: left
+    number-sections: true
+    code-fold: true
+    code-tools: true
+    embed-resources: true
+  
+execute:
+  echo: false
+  warning: false
+  freeze: auto

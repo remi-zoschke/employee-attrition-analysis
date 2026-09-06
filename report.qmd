@@ -1,0 +1,25 @@
+---
+title: "Analyse de l'attrition des employés"
+subtitle: "{{< meta params.period >}} — {{< meta params.client_name >}}"
+author: "Rémi Zoschke"
+date: "2026-07-15"
+date-format: "DD MMMM YYYY"
+jupyter: employee-attrition-analysis
+params:
+  client_name: "Meridian Pharma"
+  period: "T2 2026"
+---
+
+```{python}
+#| tags: [parameters]
+from src.config import PROCESSED_DATA_PATH
+data_file = PROCESSED_DATA_PATH
+```
+
+```{python}
+#| include: false
+import pandas as pd
+from src.data_loader import load_processed
+
+df = load_processed(data_file)
+```
