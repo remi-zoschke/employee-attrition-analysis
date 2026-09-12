@@ -63,3 +63,54 @@ def create_donut_chart(
     )
 
     return fig
+
+
+def create_bar_chart(
+    df: pd.DataFrame,
+    x: str,
+    y: str,
+    title: str = "",
+    horizontal: bool = False,
+) -> go.Figure:
+    """
+    Create a bar chart for comparisons.
+
+    Args:
+        df: DataFrame
+        x: column for x-axis
+        y: column for y-axis
+        title: chart title
+        horizontal: if True, create horizontal bars
+
+    Returns:
+        Plotly figure
+    """
+    orientation = "h" if horizontal else "v"
+    x_arg, y_arg = (y, x) if horizontal else (x, y)
+
+    fig = px.bar(
+        df,
+        x=x_arg,
+        y=y_arg,
+        title=f"<b>{title}</b>",
+        orientation=orientation,
+        text_auto=".0%",
+        template="simple_white",
+        color_discrete_sequence=[PRIMARY_COLOR],
+        labels={x_arg: "", y_arg: ""},
+    )
+    fig.update_layout(
+        title_x=0.5,
+        title_font_size=22,
+        title_xanchor="center",
+        margin={"t": 20, "b": 40, "l": 40, "r": 40},
+        yaxis={"tickformat": ".0%"},
+        xaxis={"tickformat": ".0%"},
+        font={"size": 16},
+    )
+    fig.update_traces(
+        textposition="inside" if horizontal else "outside",
+        marker_line_width=0,
+    )
+
+    return fig
