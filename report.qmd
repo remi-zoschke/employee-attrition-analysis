@@ -20,6 +20,9 @@ data_file = PROCESSED_DATA_PATH
 #| include: false
 import pandas as pd
 from src.data_loader import load_processed
+from src.charts import create_donut_chart, create_bar_chart
 
 df = load_processed(data_file)
 ```
+
+{{< include sections/_data-exploration.qmd >}}

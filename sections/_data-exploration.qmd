@@ -1,0 +1,140 @@
+## Exploration des données
+
+### Répartition de l'attrition
+
+```{python}
+#| include: false
+n_total = len(df)
+n_attrition = int(df["AttritionNum"].sum())
+attrition_pct = round(df["AttritionNum"].mean() * 100)
+```
+
+```{python}
+#| echo: false
+attrition_rates = (
+    df["AttritionNum"]
+    .map({1: "Oui", 0: "Non"})
+    .value_counts(normalize=True)
+    .round(2)
+    .reset_index()
+)
+
+attrition_rates.columns = ["Attrition", "Proportion"]
+
+create_donut_chart(
+    attrition_rates,
+    values="Proportion",
+    names="Attrition",
+    total=len(df),
+)
+```
+
+Sur les `{python} n_total` employés recensés, **`{python} attrition_pct`%** ont quitté Meridian Pharma, soit **`{python} n_attrition`** départs. Ce taux, qualifié d'**élevé** selon les seuils de référence utilisés en gestion RH (seuil critique : 15 %)^[Clockwork Coworking, *Quel taux de turnover viser pour votre entreprise ?* [coworking-clockwork.fr](https://www.coworking-clockwork.fr/quel-est-le-bon-taux-de-turn-over/)] justifie un diagnostic approfondi.
+
+### Attrition par tranche d'âge
+
+```{python}
+#| echo: false
+attrition_by_age = df.groupby("AgeGroup")["AttritionNum"].mean().round(2).reset_index()
+attrition_by_age.columns = ["AgeGroup", "AttritionRate"]
+
+create_bar_chart(
+    attrition_by_age,
+    x="AgeGroup",
+    y="AttritionRate"
+)
+```
+
+Les employés les plus jeunes (**18-25 ans** et **26-35 ans**) sont les plus touchés par l'attrition, avec des taux respectifs de **35%** et **19%**. À l'inverse, les employés plus expérimentés présentent des taux bien inférieurs : les **46-60 ans** affichent un taux près de **3 fois plus faible** que celui des **18-25ans**.
+
+Cette surreprésentation des jeunes dans les départs suggère l'existence de facteurs corrélés à la jeunesse (statut marital, niveau de revenu, ancienneté) qui amplifieraient le risque d'attrition chez les jeunes employés.
+
+### Attrition par département
+
+```{python}
+#| echo: false
+attrition_by_dpt = (
+    df.assign(
+        Department=df["Department"].replace({
+            "Sales": "Ventes",
+            "Human Resources": "RH",
+            "Research & Development": "R&D",
+        })
+    )
+    .groupby("Department")["AttritionNum"]
+    .mean()
+    .round(2)
+    .reset_index()
+    .sort_values("AttritionNum", ascending=False)
+)
+
+attrition_by_dpt.columns = ["Department", "AttritionRate"]
+
+create_bar_chart(
+    attrition_by_dpt,
+    x="Department",
+    y="AttritionRate"
+)
+```
+
+L'attrition touche les trois départements de manière inégale : elle est la plus forte dans les **Ventes** (**21%**) et la plus faible en **R&D** (**14%**), avec les **RH** en position intermédiaire (**19%**).
+
+La surreprésentation des départs dans les **Ventes** pourrait s'expliquer par la pression des objectifs commerciaux et la forte concurrence du marché pour ces profils.
+
+### Attrition et heures supplémentaires
+
+```{python}
+#| echo: false
+attrition_by_overtime = (
+    df.assign(OverTime=df["OverTime"].map({"Yes": "Oui", "No": "Non"}))
+    .groupby("OverTime")["AttritionNum"]
+    .mean()
+    .round(2)
+    .reset_index()
+    .sort_values("AttritionNum", ascending=False)
+)
+
+attrition_by_overtime.columns = ["OverTime", "AttritionRate"]
+
+create_bar_chart(
+    attrition_by_overtime,
+    x="OverTime",
+    y="AttritionRate"
+)
+```
+
+Les employés effectuant des heures supplémentaires afffichent un taux d'attrition **3 fois plus élevé** que leurs collègues (**31%** contre **10%**).
+
+Ce résultat est marquant : la surcharge de travail, qu'elle se traduise par moins de temps libre ou une charge mentale accrue, représente un facteur de départ majeur à traiter en priorité.
+
+### Attrition par niveau de revenu
+
+```{python}
+#| echo: false
+attrition_by_income = (
+    df.groupby("IncomeGroup")["AttritionNum"]
+    .mean()
+    .round(2)
+    .reset_index()
+    .sort_values("IncomeGroup", ascending=False)
+)
+
+attrition_by_income.columns = ["IncomeGroup", "AttritionRate"]
+
+create_bar_chart(
+    attrition_by_income,
+    x="IncomeGroup",
+    y="AttritionRate",
+    horizontal=True
+)
+```
+
+Il existe une relation claire entre niveau de revenu et attrition : les employés à bas salaire présentent un risque de départ près de **3 fois plus élevé** que ceux à revenu très élevé (**29%** contre **10%**).
+
+Cette relation suggère que la rémunération constitue un levier de rétention significatif, cet effet sera vérifié par les tests statistiques.
+
+### Synthèse
+
+Le taux d'attrition de Meridian Pharma (**16%**) dépasse le seuil critique de **15%** retenu dans les référentiels RH, ce qui justifie un diagnostic approfondi.
+
+L'exploration visuelle révèle deux types de variables. Certaines, comme l'**âge** et le **département**, présentent des variations d'attrition qui pourraient s'expliquer par des facteurs tiers plutôt que par un lien direct. D'autres, comme les **heures supplémentaires** et le **niveau de revenu**, affichent un lien plus direct avec l'attrition, ce qui laisse entrevoir des leviers d'action concrets pour la direction RH.
