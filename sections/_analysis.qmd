@@ -1,0 +1,105 @@
+## Tests statistiques
+
+L'exploration visuelle a mis en évidence des écarts d'attrition entre groupes. Les tests statistiques vont permettre d'identifier les variables réellement liées à l'attrition et de confirmer ces observations.
+
+### Écarts de moyennes entre partants et restants
+
+Pour chaque variable continue, nous comparons les moyennes entre les employés ayant quitté l'entreprise et ceux restés en poste. Plus l'écart entre les deux groupes est important, plus la variable est susceptible d'être liée à l'attrition.
+
+```{python}
+#| echo: false
+from src.analysis import ttest_tests
+from src.tables import create_ttest_table
+
+continuous_vars = [
+    "Age", "DistanceFromHome", "MonthlyIncome", "NumCompaniesWorked",
+    "PercentSalaryHike", "TotalWorkingYears", "TrainingTimesLastYear",
+    "YearsAtCompany", "YearsInCurrentRole", "YearsSinceLastPromotion",
+    "YearsWithCurrManager",
+]
+
+continuous_vars_ttest = ttest_tests(df, continuous_vars)
+create_ttest_table(continuous_vars_ttest, labels=labels_fr)
+```
+
+**7 variables sur 11** présentent des écarts significatifs (*p* < 0,05) et d'ampleur non négligeable (*d* de Cohen > 0,2). Les plus discriminantes sont l'**expérience professionnelle**, le **revenu mensuel** et l'**ancienneté dans le poste** : les employés qui partent sont en moyenne plus jeunes, moins bien payés et moins ancrés dans leur rôle.
+
+Seule la **distance domicile-travail** montre un effet inverse : les partants habitent en moyenne plus loin de l'entreprise.
+
+### Association entre variables catégorielles et attrition
+
+Pour chaque variable catégorielle, nous comparons la répartition des modalités entre les employés ayant quitté l'entreprise et ceux restés en poste (test du χ²). Plus les répartitions diffèrent entre les deux groupes, plus la variable est susceptible d'être liée à l'attrition.
+
+```{python}
+#| echo: false
+from src.analysis import chi2_tests
+from src.tables import create_chi2_table
+
+categorical_vars = [
+    "MaritalStatus", "OverTime", "Department", "JobRole",
+    "JobLevel", "Education", "EducationField", "PerformanceRating",
+    "RelationshipSatisfaction", "StockOptionLevel",
+    "BusinessTravel", "Gender", "JobInvolvement",
+    "EnvironmentSatisfaction", "JobSatisfaction", "WorkLifeBalance",
+]
+
+categorical_vars_chi2 = chi2_tests(df, categorical_vars)
+create_chi2_table(categorical_vars_chi2, labels=labels_fr)
+```
+
+```{python}
+#| include: false
+overtime_yes = round(df[df["OverTime"] == "Yes"]["AttritionNum"].mean() * 100)
+overtime_no = round(df[df["OverTime"] == "No"]["AttritionNum"].mean() * 100)
+single_rate = round(df[df["MaritalStatus"] == "Single"]["AttritionNum"].mean() * 100)
+married_rate = round(df[df["MaritalStatus"] == "Married"]["AttritionNum"].mean() * 100)
+no_stock = round(df[df["StockOptionLevel"] == 0]["AttritionNum"].mean() * 100)
+has_stock = round(df[df["StockOptionLevel"] > 0]["AttritionNum"].mean() * 100)
+
+jobrole_labels_fr = {
+    "Sales Executive": "cadres commerciaux",
+    "Research Scientist": "chercheurs",
+    "Laboratory Technician": "techniciens de laboratoire",
+    "Manufacturing Director": "directeurs de production",
+    "Healthcare Representative": "représentants santé",
+    "Manager": "managers",
+    "Sales Representative": "représentants commerciaux",
+    "Research Director": "directeurs de recherche",
+    "Human Resources": "ressources humaines",
+}
+
+jobrole_attrition_ranking = (
+    df.groupby("JobRole")["AttritionNum"]
+      .mean()
+      .sort_values(ascending=False)
+      .mul(100)
+      .round(0)
+      .rename(index=jobrole_labels_fr)
+)
+
+top1 = jobrole_attrition_ranking.index[0]
+top1_pct = int(jobrole_attrition_ranking.iloc[0])
+top2 = jobrole_attrition_ranking.index[1]
+top2_pct = int(jobrole_attrition_ranking.iloc[1])
+top3 = jobrole_attrition_ranking.index[2]
+top3_pct = int(jobrole_attrition_ranking.iloc[2])
+```
+
+**10 variables catégorielles sur 16** présentent des écarts significatifs (*p* < 0,05) et d'ampleur non négligeable (*V* de Cramér > 0,1). Les employés effectuant des **heures supplémentaires** quittent l'entreprise à `{python} overtime_yes`%, contre seulement `{python} overtime_no`% pour ceux qui n'en font pas. Les **célibataires** partent à `{python} single_rate`% contre `{python} married_rate`% pour les mariés, et les employés sans **stock-options** à `{python} no_stock`% contre `{python} has_stock`% pour les détenteurs.
+
+D'autres facteurs liés à l'**engagement** (implication dans le poste, déplacements professionnels) et à la **satisfaction** (environnement de travail, poste, équilibre vie pro/perso) sont également associés à l'attrition.
+
+Le **poste occupé** et le **niveau hiérarchique** jouent également un rôle, les postes les plus exposés étant les **`{python} top1`** (`{python} top1_pct`%), les **`{python} top2`** (`{python} top2_pct`%) et les **`{python} top3`** (`{python} top3_pct`%).
+
+### Variables retenues pour la modélisation
+
+```{python}
+#| include: false
+n_continuous = continuous_vars_ttest["keep"].sum()
+n_categorical = categorical_vars_chi2["keep"].sum()
+n_total = n_continuous + n_categorical
+```
+
+Au total, **`{python} int(n_total)` variables** sont retenues pour la modélisation : **`{python} int(n_continuous)` continues** (expérience totale, revenu, ancienneté dans le poste, ancienneté avec le manager, ancienneté dans l'entreprise, âge, distance domicile) et **`{python} int(n_categorical)` catégorielles** (heures supplémentaires, poste, stock-options, statut marital, implication, déplacements, satisfaction environnement, satisfaction poste, équilibre vie pro/perso).
+
+Ces variables feront l'objet d'une vérification de multicolinéarité avant d'être intégrées au modèle.

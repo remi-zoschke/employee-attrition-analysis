@@ -25,4 +25,68 @@ from src.charts import create_donut_chart, create_bar_chart
 df = load_processed(data_file)
 ```
 
+
+```{python}
+# French labels for all variables
+labels_fr = {
+    # Raw variable names (for stats tables)
+    "MonthlyIncome": "Revenu mensuel",
+    "TotalWorkingYears": "Expérience totale",
+    "YearsWithCurrManager": "Ancienneté avec le manager",
+    "YearsInCurrentRole": "Ancienneté dans le poste",
+    "YearsAtCompany": "Ancienneté entreprise",
+    "Age": "Âge",
+    "DistanceFromHome": "Distance domicile",
+    "TrainingTimesLastYear": "Formations (année précédente)",
+    "NumCompaniesWorked": "Nb entreprises précédentes",
+    "YearsSinceLastPromotion": "Années depuis dernière promotion",
+    "PercentSalaryHike": "Augmentation salariale (%)",
+    "OverTime": "Heures supplémentaires",
+    "JobRole": "Poste occupé",
+    "JobLevel": "Niveau hiérarchique",
+    "StockOptionLevel": "Stock-options",
+    "MaritalStatus": "Statut marital",
+    "JobInvolvement": "Implication",
+    "BusinessTravel": "Déplacements",
+    "EnvironmentSatisfaction": "Satisfaction environnement",
+    "JobSatisfaction": "Satisfaction poste",
+    "WorkLifeBalance": "Équilibre vie pro/perso",
+    "EducationField": "Domaine d'études",
+    "Department": "Département",
+    "RelationshipSatisfaction": "Satisfaction relationnelle",
+    "Education": "Niveau d'éducation",
+    "Gender": "Genre",
+    "PerformanceRating": "Note de performance",
+    # Encoded variable names (for regression/SHAP)
+    "OverTime_Yes": "Heures supplémentaires",
+    "StockOptionLevel_0": "Sans stock-options",
+    "StockOptionLevel_1": "Stock-options (niv. 1)",
+    "StockOptionLevel_2": "Stock-options (niv. 2)",
+    "StockOptionLevel_3": "Stock-options (niv. 3)",
+    "MaritalStatus_Single": "Célibataire",
+    "MaritalStatus_Married": "Marié(e)",
+    "Gender_Male": "Genre (homme)",
+    "JobInvolvement_1": "Implication (1)",
+    "JobInvolvement_2": "Implication (2)",
+    "JobInvolvement_3": "Implication (3)",
+    "JobInvolvement_4": "Implication (4)",
+    "BusinessTravel_Travel_Frequently": "Déplacements fréquents",
+    "BusinessTravel_Travel_Rarely": "Déplacements occasionnels",
+    "EnvironmentSatisfaction_1": "Satisfaction env. (1)",
+    "EnvironmentSatisfaction_2": "Satisfaction env. (2)",
+    "EnvironmentSatisfaction_3": "Satisfaction env. (3)",
+    "EnvironmentSatisfaction_4": "Satisfaction env. (4)",
+    "JobSatisfaction_1": "Satisfaction poste (1)",
+    "JobSatisfaction_2": "Satisfaction poste (2)",
+    "JobSatisfaction_3": "Satisfaction poste (3)",
+    "JobSatisfaction_4": "Satisfaction poste (4)",
+    "WorkLifeBalance_1": "Équilibre vie pro/perso (1)",
+    "WorkLifeBalance_2": "Équilibre vie pro/perso (2)",
+    "WorkLifeBalance_3": "Équilibre vie pro/perso (3)",
+    "WorkLifeBalance_4": "Équilibre vie pro/perso (4)",
+}
+```
+
 {{< include sections/_data-exploration.qmd >}}
+
+{{< include sections/_analysis.qmd >}}
