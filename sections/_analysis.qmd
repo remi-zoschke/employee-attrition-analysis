@@ -103,3 +103,70 @@ n_total = n_continuous + n_categorical
 Au total, **`{python} int(n_total)` variables** sont retenues pour la modélisation : **`{python} int(n_continuous)` continues** (expérience totale, revenu, ancienneté dans le poste, ancienneté avec le manager, ancienneté dans l'entreprise, âge, distance domicile) et **`{python} int(n_categorical)` catégorielles** (heures supplémentaires, poste, stock-options, statut marital, implication, déplacements, satisfaction environnement, satisfaction poste, équilibre vie pro/perso).
 
 Ces variables feront l'objet d'une vérification de multicolinéarité avant d'être intégrées au modèle.
+
+## Modélisation
+
+### Vérification de la multicolinéarité
+
+#### Variables continues
+
+```{python}
+#| include: false
+from src.analysis import correlation_matrix
+from src.tables import create_correlation_table
+
+continuous_vars_kept = continuous_vars_ttest[
+    continuous_vars_ttest["keep"]
+]["variable"].tolist()
+
+corr_pairs = correlation_matrix(df, continuous_vars_kept)
+```
+
+```{python}
+#| echo: false
+create_correlation_table(corr_pairs, labels=labels_fr)
+```
+
+4 paires de variables fortement corrélées (*r* > 0.7) ont été détectées. 3 variables, **Expérience totale**, **Ancienneté dans le poste** et **Ancienneté entreprise**, sont écartées au profit du **Revenu mensuel** et de l'**Ancienneté avec le manager**, plus directement actionnables pour la direction RH.
+
+#### Variables catégorielles et continues
+
+```{python}
+#| include: false
+from src.analysis import anova_tests
+from src.tables import create_anova_table
+
+categorical_vars_kept = categorical_vars_chi2[categorical_vars_chi2["keep"]]["variable"].tolist()
+continuous_vars_after_corr = ["MonthlyIncome", "YearsWithCurrManager", "Age", "DistanceFromHome"]
+```
+
+L'ANOVA mesure l'association entre chaque variable catégorielle et chaque variable continue retenue. Lorsqu'une variable catégorielle permet de **prédire** une variable continue (ou inversement), les inclure toutes les deux dans le modèle crée de la **redondance** et fausse les coefficients. Seules les associations fortes (*F* > 50) sont présentées ci-dessous :
+
+```{python}
+#| echo: false
+anova_results = anova_tests(df, categorical_vars_kept, continuous_vars_after_corr)
+create_anova_table(anova_results[anova_results["f_stat"] > 50], labels=labels_fr)
+```
+
+```{python}
+#| include: false
+categorical_vars_kept.remove("JobRole")
+categorical_vars_kept.remove("JobLevel")
+```
+
+4 associations fortes ont été détectées. Le **revenu mensuel** est fortement dépendant du **niveau hiérarchique** et du **poste occupé** (*F* = 4530 et *F* = 810). De même, l'**âge** et l'**ancienneté avec le manager** sont liés au **niveau hiérarchique**. Le **niveau hiérarchique** et le **poste occupé** sont donc écartés du modèle.
+
+### Vérification des hypothèses
+
+```{python}
+#| include: false
+n_continuous = len(continuous_vars_after_corr)
+n_categorical = len(categorical_vars_kept)
+n_total = n_continuous + n_categorical
+n_departures = int(df["AttritionNum"].sum())
+```
+
+- **Variable cible binaire** : AttritionNum (0 = restant, 1 = partant) ✓
+- **Multicolinéarité** : vérifiée et corrigée (voir ci-dessus) ✓
+- **Indépendance des observations** : chaque ligne correspond à un employé distinct ✓
+- **Taille d'échantillon suffisante** : 1 470 observations pour `{python} int(n_total)` variables retenues ✓

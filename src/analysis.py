@@ -1,6 +1,6 @@
 import numpy as np
 import pandas as pd
-from scipy.stats import chi2_contingency, ttest_ind
+from scipy.stats import chi2_contingency, f_oneway, ttest_ind
 
 
 def ttest_tests(df: pd.DataFrame, vars: list[str]) -> pd.DataFrame:
@@ -65,3 +65,66 @@ def chi2_tests(df: pd.DataFrame, vars: list[str]) -> pd.DataFrame:
             }
         )
     return pd.DataFrame(results).sort_values("cramers_v", ascending=False)
+
+
+def correlation_matrix(
+    df: pd.DataFrame, vars: list[str], threshold: float = 0.7
+) -> pd.DataFrame:
+    """
+    Compute correlation matrix and flag pairs above threshold.
+
+    Args:
+        df: DataFrame
+        vars: list of continuous variable names
+        threshold: correlation threshold for multicollinearity
+
+    Returns:
+        DataFrame with variable pairs and their correlation
+    """
+    corr = df[vars].corr().round(2)
+    pairs = []
+    for i in range(len(vars)):
+        for j in range(i + 1, len(vars)):
+            r = corr.iloc[i, j]
+            if abs(r) >= threshold:
+                pairs.append(
+                    {
+                        "var_1": vars[i],
+                        "var_2": vars[j],
+                        "correlation": r,
+                    }
+                )
+    return pd.DataFrame(pairs).sort_values("correlation", ascending=False)
+
+
+def anova_tests(
+    df: pd.DataFrame, cat_vars: list[str], num_vars: list[str]
+) -> pd.DataFrame:
+    """
+    ANOVA tests between categorical and continuous variables.
+
+    Args:
+        df: DataFrame
+        cat_vars: list of categorical variable names
+        num_vars: list of continuous variable names
+    Returns:
+        DataFrame with F-statistic and p_value for all combinations
+    """
+    results = []
+    for num_var in num_vars:
+        for cat_var in cat_vars:
+            groups = [
+                df[df[cat_var] == level][num_var].values
+                for level in df[cat_var].unique()
+            ]
+            f_stat, p_value = f_oneway(*groups)
+            results.append(
+                {
+                    "cat_var": cat_var,
+                    "num_var": num_var,
+                    "f_stat": round(float(f_stat), 2),
+                    "p_value": float(f"{p_value:.2e}"),
+                    "significant": p_value < 0.05,
+                }
+            )
+    return pd.DataFrame(results).sort_values("f_stat", ascending=False)
