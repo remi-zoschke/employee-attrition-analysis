@@ -170,3 +170,81 @@ n_departures = int(df["AttritionNum"].sum())
 - **Multicolinéarité** : vérifiée et corrigée (voir ci-dessus) ✓
 - **Indépendance des observations** : chaque ligne correspond à un employé distinct ✓
 - **Taille d'échantillon suffisante** : 1 470 observations pour `{python} int(n_total)` variables retenues ✓
+
+### Facteurs explicatifs de l'attrition
+
+La régression logistique mesure l'effet de chaque variable sur la probabilité de départ, **toutes les autres variables étant maintenues constantes**. Les résultats sont présentés sous forme de multiplicateur (×) ou diviseur (÷) du risque de départ.
+
+$$
+\begin{aligned}
+P(\text{Attrition}) = f(&\text{MonthlyIncome, YearsWithCurrManager, Age, DistanceFromHome,} \\
+&\text{OverTime, StockOptionLevel, MaritalStatus, JobInvolvement,} \\
+&\text{BusinessTravel, EnvironmentSatisfaction, JobSatisfaction,} \\
+&\text{WorkLifeBalance})
+\end{aligned}
+$$
+
+```{python}
+#| include: false
+from src.analysis import logistic_regression_explain
+
+result, odds = logistic_regression_explain(df, continuous_vars_after_corr, categorical_vars_kept)
+
+odds_significant = odds[odds["p_value"] < 0.05].copy()
+
+labels_regression = {
+    "MonthlyIncome": "Revenu mensuel (par 1000€)",
+    "YearsWithCurrManager": "Ancienneté avec le manager",
+    "Age": "Âge",
+    "DistanceFromHome": "Distance domicile",
+    "OverTime_Yes": "Heures supplémentaires",
+    "StockOptionLevel_1": "Stock-options (niv. 1 vs 0)",
+    "StockOptionLevel_2": "Stock-options (niv. 2 vs 0)",
+    "JobInvolvement_2": "Implication (2 vs 1)",
+    "JobInvolvement_3": "Implication (3 vs 1)",
+    "JobInvolvement_4": "Implication (4 vs 1)",
+    "BusinessTravel_Travel_Frequently": "Déplacements fréquents",
+    "BusinessTravel_Travel_Rarely": "Déplacements occasionnels",
+    "EnvironmentSatisfaction_2": "Satisfaction env. (2 vs 1)",
+    "EnvironmentSatisfaction_3": "Satisfaction env. (3 vs 1)",
+    "EnvironmentSatisfaction_4": "Satisfaction env. (4 vs 1)",
+    "JobSatisfaction_3": "Satisfaction poste (3 vs 1)",
+    "JobSatisfaction_4": "Satisfaction poste (4 vs 1)",
+    "WorkLifeBalance_2": "Équilibre vie pro/perso (2 vs 1)",
+    "WorkLifeBalance_3": "Équilibre vie pro/perso (3 vs 1)",
+    "WorkLifeBalance_4": "Équilibre vie pro/perso (4 vs 1)",
+}
+
+odds_significant["variable"] = odds_significant["variable"].map(labels_regression)
+```
+
+:::: {.columns}
+::: {.column width="48%"}
+
+```{python}
+#| echo: false
+from src.tables import create_risk_table
+table_risk, table_protect = create_risk_table(odds_significant)
+table_protect
+```
+
+:::
+
+::: {.column width="4%"}
+:::
+
+::: {.column width="48%"}
+
+```{python}
+#| echo: false
+table_risk
+```
+
+:::
+::::
+
+Le modèle identifie **4 facteurs de risque** et **16 facteurs protecteurs** significatifs. Les niveaux de chaque variable sont comparés à leur modalité la plus faible (détail dans le tableau ci-dessus).
+
+Les **heures supplémentaires** et les **déplacements fréquents** sont les facteurs les plus critiques, multipliant chacun le risque de départ par plus de **5**. Les **déplacements occasionnels** multiplient le risque par **2.4**. La **distance domicile-travail** augmente le risque de **4% par kilomètre** supplémentaire.
+
+À l'inverse, l'**implication dans le poste** est le levier de rétention le plus puissant : un employé très impliqué a près de **8 fois moins de risque** de partir qu'un employé peu impliqué. La **satisfaction** (environnement, poste, équilibre vie pro/perso) divise le risque par **2 à 3.5 selon les niveaux**. Les **stock-options** ont un effet comparable, divisant le risque par **2.5 à 3**. Chaque année d'**ancienneté avec le manager** réduit le risque de **11%** et le **revenu** le réduit de **8% par tranche de 1000€**.

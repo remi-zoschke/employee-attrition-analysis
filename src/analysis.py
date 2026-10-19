@@ -1,5 +1,6 @@
 import numpy as np
 import pandas as pd
+import statsmodels.api as sm
 from scipy.stats import chi2_contingency, f_oneway, ttest_ind
 
 
@@ -128,3 +129,43 @@ def anova_tests(
                 }
             )
     return pd.DataFrame(results).sort_values("f_stat", ascending=False)
+
+
+def logistic_regression_explain(
+    df: pd.DataFrame,
+    continuous: list[str],
+    categorical: list[str],
+) -> tuple:
+    """
+    Fit an explanatory logistic regression model.
+
+    Args:
+        df: DataFrame with AttritionNum and selected features
+        continuous: list of continuous variable names
+        categorical: list of categorical variable names
+
+    Returns:
+        Tuple of (model result, odds ratios DataFrame)
+    """
+    X = df[continuous + categorical].copy()
+    X["MonthlyIncome"] = X["MonthlyIncome"] / 1000
+
+    X = pd.get_dummies(X, columns=categorical, drop_first=True).astype(float)
+    X = sm.add_constant(X)
+
+    y = df["AttritionNum"]
+
+    model = sm.Logit(y, X)
+    result = model.fit(disp=0)
+
+    odds = pd.DataFrame(
+        {
+            "variable": result.params.index,
+            "coefficient": result.params.values.round(3),
+            "odds_ratio": np.exp(result.params).values.round(3),
+            "p_value": result.pvalues.values.round(4),
+        }
+    )
+    odds = odds[odds["variable"] != "const"]
+
+    return result, odds

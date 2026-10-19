@@ -184,3 +184,54 @@ def create_anova_table(df: pd.DataFrame, labels: dict | None = None) -> GT:
         .fmt_number(columns="f_stat", decimals=1, use_seps=False)
         .fmt_number(columns="p_value", decimals=4)
     )
+
+
+def create_risk_table(df: pd.DataFrame) -> tuple:
+    """
+    Create simplified risk/protective factors tables.
+
+    Args:
+        df: DataFrame with significant odds ratios
+
+    Returns:
+        Tuple of (risk table, protective table)
+    """
+    df = df.reset_index(drop=True).copy()
+
+    def stars(p):
+        if p < 0.01:
+            return "***"
+        elif p < 0.05:
+            return "**"
+        elif p < 0.1:
+            return "*"
+        return ""
+
+    def build_table(data, title, label, color):
+        data = data.reset_index(drop=True)
+        data["significance"] = data["p_value"].apply(stars)
+        df_pl = pl.from_pandas(data[["variable", "impact", "significance"]])
+        return (
+            GT(df_pl)
+            .tab_header(title=title)
+            .cols_label(variable="Variable", impact=label, significance="")
+            .cols_align(align="center")
+            .cols_align(align="left", columns="variable")
+            .tab_style(style=style.text(weight="bold"), locations=loc.column_labels())
+            .tab_style(style=style.fill(color=color), locations=loc.body())
+            .fmt_number(columns="impact", decimals=2)
+            .tab_source_note(
+                "*** très significatif (p < 0.01) ** significatif (p < 0.05) * faiblement significatif (p < 0.1)"
+            )
+        )
+
+    risk = df[df["odds_ratio"] > 1].sort_values("odds_ratio", ascending=False).copy()
+    risk["impact"] = risk["odds_ratio"]
+
+    protect = df[df["odds_ratio"] <= 1].sort_values("odds_ratio", ascending=True).copy()
+    protect["impact"] = 1 / protect["odds_ratio"]
+
+    return (
+        build_table(risk, "Facteurs de risque", "Risque ×", "#FEE2E2"),
+        build_table(protect, "Facteurs protecteurs", "Risque ÷", "#DCFCE7"),
+    )
