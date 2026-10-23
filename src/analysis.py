@@ -2,6 +2,11 @@ import numpy as np
 import pandas as pd
 import statsmodels.api as sm
 from scipy.stats import chi2_contingency, f_oneway, ttest_ind
+from sklearn.compose import ColumnTransformer
+from sklearn.linear_model import LogisticRegression
+from sklearn.model_selection import train_test_split
+from sklearn.pipeline import Pipeline
+from sklearn.preprocessing import MinMaxScaler, OneHotEncoder
 
 
 def ttest_tests(df: pd.DataFrame, vars: list[str]) -> pd.DataFrame:
@@ -169,3 +174,58 @@ def logistic_regression_explain(
     odds = odds[odds["variable"] != "const"]
 
     return result, odds
+
+
+def logistic_regression_predict(
+    df: pd.DataFrame,
+    continuous: list[str],
+    categorical: list[str],
+    test_size: float = 0.2,
+    random_state: int = 42,
+) -> tuple:
+    """
+    Fit a predictive logistic regression.
+
+    Args:
+        df: DataFrame with AttritionNum and features
+        continuous: list of continuous variable names
+        categorical: list of categorical variable names
+        test_size: proportion of test set
+        random_state: seed for reproducibility
+
+    Returns:
+        Tuple of (pipeline, X_test, y_test, y_pred, y_pred_proba)
+    """
+    X = df[continuous + categorical]
+    y = df["AttritionNum"]
+
+    X_train, X_test, y_train, y_test = train_test_split(
+        X, y, test_size=test_size, random_state=random_state, stratify=y
+    )
+
+    preprocessor = ColumnTransformer(
+        transformers=[
+            ("num", MinMaxScaler(), continuous),
+            (
+                "cat",
+                OneHotEncoder(drop="if_binary", handle_unknown="ignore"),
+                categorical,
+            ),
+        ]
+    )
+
+    pipeline = Pipeline(
+        steps=[
+            ("preprocessor", preprocessor),
+            (
+                "classifier",
+                LogisticRegression(random_state=random_state, class_weight="balanced"),
+            ),
+        ]
+    )
+
+    pipeline.fit(X_train, y_train)
+    y_pred = pipeline.predict(X_test)
+    y_pred_proba = pipeline.predict_proba(X_test)[:, 1]
+
+    return pipeline, X_test, y_test, y_pred, y_pred_proba

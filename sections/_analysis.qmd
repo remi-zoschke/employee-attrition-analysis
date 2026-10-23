@@ -248,3 +248,52 @@ Le modèle identifie **4 facteurs de risque** et **16 facteurs protecteurs** sig
 Les **heures supplémentaires** et les **déplacements fréquents** sont les facteurs les plus critiques, multipliant chacun le risque de départ par plus de **5**. Les **déplacements occasionnels** multiplient le risque par **2.4**. La **distance domicile-travail** augmente le risque de **4% par kilomètre** supplémentaire.
 
 À l'inverse, l'**implication dans le poste** est le levier de rétention le plus puissant : un employé très impliqué a près de **8 fois moins de risque** de partir qu'un employé peu impliqué. La **satisfaction** (environnement, poste, équilibre vie pro/perso) divise le risque par **2 à 3.5 selon les niveaux**. Les **stock-options** ont un effet comparable, divisant le risque par **2.5 à 3**. Chaque année d'**ancienneté avec le manager** réduit le risque de **11%** et le **revenu** le réduit de **8% par tranche de 1000€**.
+
+### Prédiction du risque de départ
+
+Le modèle prédictif utilise les mêmes variables que le modèle explicatif, complétées par deux **variables de contrôle** (statut marital et genre) pour isoler l'effet des autres facteurs. Le pipeline intègre une normalisation des variables continues et un encodage des variables catégorielles.
+
+En raison du déséquilibre des classes (84% restants / 16% partants), le modèle est calibré pour **maximiser la détection des départs**.
+
+```{python}
+from src.analysis import logistic_regression_predict
+from src.config import RANDOM_STATE, TEST_SIZE
+from sklearn.metrics import roc_auc_score, confusion_matrix
+
+categorical_with_controls = list(set(categorical_vars_kept + ["MaritalStatus", "Gender"]))
+
+pipeline, X_test, y_test, y_pred, y_pred_proba = logistic_regression_predict(
+    df, continuous_vars_after_corr, categorical_with_controls,
+    test_size=TEST_SIZE, random_state=RANDOM_STATE
+)
+
+auc = round(roc_auc_score(y_test, y_pred_proba), 2)
+cm = confusion_matrix(y_test, y_pred)
+tn, fp, fn, tp = cm.ravel()
+tn, fp, fn, tp = [int(x) for x in cm.ravel()]
+```
+
+#### Performance du modèle (AUC = `{python} auc`)
+
+```{python}
+#| echo: false
+import plotly.express as px
+
+fig = px.imshow(
+    cm,
+    x=["Prédit : reste", "Prédit : part"],
+    y=["Réel : reste", "Réel : part"],
+    color_continuous_scale="Blues",
+    text_auto=True,
+)
+fig.update_layout(
+    coloraxis_showscale=False,
+    margin={"t": 40, "b": 80, "l": 40, "r": 40},
+    font={"size": 14},
+)
+fig
+```
+
+Le modèle atteint une AUC de **`{python} auc`** : si l'on prend un employé partant et un employé restant au hasard, le modèle attribue correctement le score de risque le plus élevé au partant dans **82% des cas**. Cette performance est satisfaisante pour un modèle de détection RH.
+
+Le modèle identifie **`{python} tp`** départs sur **`{python} tp + fn`** réels (précision de **`{python} int(tp/(tp+fn)*100)`%**), au prix de **`{python} fp`** fausses alertes. Autrement dit, sur 10 employés qui vont partir, le modèle en détecte environ 8. 
