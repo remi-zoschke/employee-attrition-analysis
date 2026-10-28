@@ -11,3 +11,7 @@ PROCESSED_DATA_PATH = DATA_DIR / "processed" / "meridian_pharma_hr_attrition.par
 # Modeling
 RANDOM_STATE = 42
 TEST_SIZE = 0.2
+
+# Replacement cost ratios (SHRM)
+COST_MIN_RATIO = 0.5
+COST_MAX_RATIO = 2.0

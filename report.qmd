@@ -90,3 +90,5 @@ labels_fr = {
 {{< include sections/_data-exploration.qmd >}}
 
 {{< include sections/_analysis.qmd >}}
+
+{{< include sections/_recommendations.qmd >}}

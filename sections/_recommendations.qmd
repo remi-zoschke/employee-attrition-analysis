@@ -1,0 +1,57 @@
+## Recommandations
+
+### Estimation du coût de l'attrition
+
+```{python}
+#| include: false
+from src.config import COST_MIN_RATIO, COST_MAX_RATIO
+
+n_at_risk = int(df["AttritionNum"].sum())
+avg_income = int(df[df["AttritionNum"] == 1]["MonthlyIncome"].mean())
+avg_yearly = avg_income * 12
+
+total_min = int(n_at_risk * avg_yearly * COST_MIN_RATIO)
+total_max = int(n_at_risk * avg_yearly * COST_MAX_RATIO)
+cost_per_min = int(avg_yearly * COST_MIN_RATIO)
+cost_per_max = int(avg_yearly * COST_MAX_RATIO)
+
+def fmt(n):
+    return f"{n:,}".replace(",", " ")
+```
+
+Le coût de remplacement d'un employé est estimé entre **50% et 200%** de son salaire annuel^[Lity, [*Exemples et méthodes pour calculer le coût réel d'un recrutement*](https://lity.so/ressources/exemples-et-methodes-pour-calculer-le-cout-reel-dun-recrutement/), 2026 — règle SHRM : 50% à 200% du salaire annuel]. Avec un salaire annuel moyen des partants de **`{python} fmt(avg_yearly)`€**, le coût total de l'attrition est estimé entre **`{python} fmt(total_min)`€** et **`{python} fmt(total_max)`€** pour les `{python} n_at_risk` départs observés, soit entre **`{python} fmt(cost_per_min)`€** et **`{python} fmt(cost_per_max)`€** par départ.
+
+### Profils types
+
+::: {.callout-warning}
+## Profil à risque élevé
+**Qui** : jeune, heures supplémentaires, déplacements fréquents, faible implication, sans stock-options
+
+**Action** : réduire les heures supplémentaires, limiter les déplacements, entretien individuel avec le manager
+:::
+
+::: {.callout-note}
+## Profil à risque modéré
+**Qui** : salaire moyen, sans stock-options, satisfaction moyenne, ancienneté faible avec le manager
+
+**Action** : attribution de stock-options, rattachement à un manager expérimenté, enquête de satisfaction trimestrielle
+:::
+
+::: {.callout-tip}
+## Profil stable
+**Qui** : expérimenté, bien rémunéré, stock-options, forte implication, bonne relation avec le manager
+
+**Action** : maintien des conditions actuelles
+:::
+
+### Actions prioritaires
+
+**3 leviers d'action immédiats** émergent de l'analyse, classés par impact sur le risque de départ :
+
+**1. Réduire les heures supplémentaires** — facteur de risque n°1 (× 5.3). Un audit des charges de travail par département permettrait d'identifier les équipes les plus exposées et de redistribuer la charge.
+
+**2. Repenser la politique de déplacements** — facteur de risque n°2 (× 5.3 pour les déplacements fréquents). Le recours au télétravail et à la visioconférence réduirait l'exposition des équipes concernées.
+
+**3. Renforcer l'implication et la satisfaction** — les facteurs protecteurs les plus puissants (risque divisé de 3 à 8). Un feedback régulier, davantage d'autonomie et un suivi trimestriel de la satisfaction renforceraient la rétention.
+
+Ces actions ciblent directement les facteurs identifiés par les modèles explicatif et prédictif. Leur mise en œuvre permettrait de réduire significativement le taux d'attrition actuel de `{python} int(df["AttritionNum"].mean() * 100)`%.
