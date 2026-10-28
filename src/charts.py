@@ -114,3 +114,62 @@ def create_bar_chart(
     )
 
     return fig
+
+
+def create_shap_bar_chart(
+    shap_values,
+    feature_names: list[str],
+    top_n: int = 10,
+    labels_fr: dict | None = None,
+) -> go.Figure:
+    """
+    Create a SHAP feature importance bar chart.
+
+    Args:
+        shap_values: SHAP values array
+        feature_names: list of feature names
+        top_n: number of top features to display
+        labels_fr: optional dict to translate feature names
+
+    Returns:
+        Plotly figure
+    """
+    import numpy as np
+
+    mean_shap = np.abs(shap_values).mean(axis=0)
+    shap_df = (
+        pd.DataFrame(
+            {
+                "feature": feature_names,
+                "importance": mean_shap,
+            }
+        )
+        .sort_values("importance", ascending=True)
+        .tail(top_n)
+    )
+
+    if labels_fr:
+        shap_df["feature"] = (
+            shap_df["feature"].map(labels_fr).fillna(shap_df["feature"])
+        )
+
+    fig = px.bar(
+        shap_df,
+        x="importance",
+        y="feature",
+        orientation="h",
+        template="simple_white",
+        color_discrete_sequence=[PRIMARY_COLOR],
+        labels={"importance": "", "feature": ""},
+    )
+    fig.update_layout(
+        margin={"t": 20, "b": 40, "l": 20, "r": 20},
+        font={"size": 14},
+    )
+    fig.update_traces(
+        textposition="outside",
+        texttemplate="%{x:.2f}",
+        cliponaxis=False,
+        textfont={"size": 12},
+    )
+    return fig

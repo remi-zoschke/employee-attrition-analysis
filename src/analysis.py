@@ -1,5 +1,6 @@
 import numpy as np
 import pandas as pd
+import shap
 import statsmodels.api as sm
 from scipy.stats import chi2_contingency, f_oneway, ttest_ind
 from sklearn.compose import ColumnTransformer
@@ -229,3 +230,28 @@ def logistic_regression_predict(
     y_pred_proba = pipeline.predict_proba(X_test)[:, 1]
 
     return pipeline, X_test, y_test, y_pred, y_pred_proba
+
+
+def compute_shap_values(pipeline, X_test: pd.DataFrame) -> tuple:
+    """
+    Compute SHAP values from a fitted pipeline.
+
+    Args:
+        pipeline: fitted sklearn pipeline
+        X_test: test features DataFrame
+
+    Returns:
+        Tuple of (shap_values, feature_names)
+    """
+    classifier = pipeline.named_steps["classifier"]
+    X_test_transformed = pipeline.named_steps["preprocessor"].transform(X_test)
+
+    explainer = shap.LinearExplainer(classifier, X_test_transformed)
+    shap_values = explainer.shap_values(X_test_transformed)
+
+    feature_names = pipeline.named_steps["preprocessor"].get_feature_names_out()
+    feature_names = [
+        name.replace("num__", "").replace("cat__", "") for name in feature_names
+    ]
+
+    return shap_values, feature_names

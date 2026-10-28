@@ -297,3 +297,24 @@ fig
 Le modèle atteint une AUC de **`{python} auc`** : si l'on prend un employé partant et un employé restant au hasard, le modèle attribue correctement le score de risque le plus élevé au partant dans **82% des cas**. Cette performance est satisfaisante pour un modèle de détection RH.
 
 Le modèle identifie **`{python} tp`** départs sur **`{python} tp + fn`** réels (précision de **`{python} int(tp/(tp+fn)*100)`%**), au prix de **`{python} fp`** fausses alertes. Autrement dit, sur 10 employés qui vont partir, le modèle en détecte environ 8. 
+
+#### Importance des variables (SHAP)
+
+Les valeurs SHAP mesurent la contribution de chaque variable à la prédiction de départ de chaque employé. Plus la valeur est élevée, plus la variable a un impact fort sur la probabilité de départ prédite par le modèle.
+
+```{python}
+#| include: false
+from src.analysis import compute_shap_values
+from src.charts import create_shap_bar_chart
+
+shap_values, feature_names = compute_shap_values(pipeline, X_test)
+```
+
+```{python}
+#| echo: false
+create_shap_bar_chart(shap_values, feature_names, labels_fr=labels_fr) 
+```
+
+Les **heures supplémentaires** dominent nettement (SHAP = 0.55), confirmant leur rôle central dans le risque de départ. L'**équilibre vie pro/perso**, l'**ancienneté avec le manager** et la **satisfaction** forment un second groupe de facteurs importants. Le **revenu** et l'**âge** ont un impact plus modéré.
+
+Les deux approches convergent sur les mêmes facteurs clés : les **heures supplémentaires** ressortent systématiquement comme le premier facteur de départ, suivies de la **satisfaction** et de l'**ancienneté avec le manager**.
