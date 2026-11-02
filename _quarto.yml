@@ -7,7 +7,7 @@ project:
 
 format:
   html:
-    theme: cosmo
+    theme: [cosmo, styles/theme.scss]
     lang: fr
     toc: true
     toc-depth: 3

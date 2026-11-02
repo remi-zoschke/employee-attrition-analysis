@@ -1,0 +1,61 @@
+/*-- scss:defaults --*/
+
+$font-size-root: 17.5px;
+
+/*-- scss:rules --*/
+
+.kpi-container {
+  display: flex;
+  gap: 20px;
+  margin-bottom: 20px;
+}
+
+.kpi-box {
+  flex: 1;
+  background: #F8FAFC;
+  border-left: 4px solid #4682B4;
+  padding: 20px;
+  border-radius: 8px;
+  text-align: center;
+}
+
+.kpi-box.warning {
+  border-left-color: #F59E0B;
+}
+
+.kpi-box.danger {
+  border-left-color: #EF4444;
+}
+
+.kpi-box.success {
+  border-left-color: #22C55E;
+}
+
+.kpi-value {
+  font-size: 32px;
+  font-weight: 700;
+  color: #1E3A5F;
+  line-height: 1.2;
+}
+
+.kpi-label {
+  font-size: 16px;
+  color: #6B7280;
+  margin-bottom: 8px;
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
+}
+
+.kpi-delta {
+  font-size: 18px;
+  margin-top: 6px;
+  font-style: italic;
+}
+
+.kpi-delta.positive {
+  color: #22C55E;
+}
+
+.kpi-delta.negative {
+  color: #EF4444;
+}

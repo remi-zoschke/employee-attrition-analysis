@@ -1,0 +1,74 @@
+## Synthèse
+
+```{python}
+#| include: false
+from src.config import COST_MIN_RATIO, COST_MAX_RATIO, RANDOM_STATE, TEST_SIZE
+from src.analysis import logistic_regression_predict
+from sklearn.metrics import roc_auc_score, confusion_matrix
+
+n_total_employees = len(df)
+attrition_rate = int(df["AttritionNum"].mean() * 100)
+n_departures = int(df["AttritionNum"].sum())
+avg_yearly = int(df[df["AttritionNum"] == 1]["MonthlyIncome"].mean()) * 12
+cost_per_min = int(avg_yearly * COST_MIN_RATIO)
+cost_per_max = int(avg_yearly * COST_MAX_RATIO)
+cost_per_avg = int(avg_yearly * (COST_MIN_RATIO + COST_MAX_RATIO) / 2)
+
+def fmt(n):
+    return f"{n:,}".replace(",", " ")
+
+continuous_tmp = ["MonthlyIncome", "YearsWithCurrManager", "Age", "DistanceFromHome"]
+categorical_tmp = [
+    "OverTime", "StockOptionLevel", "JobInvolvement",
+    "BusinessTravel", "EnvironmentSatisfaction",
+    "JobSatisfaction", "WorkLifeBalance",
+]
+categorical_with_controls_tmp = list(set(categorical_tmp + ["MaritalStatus", "Gender"]))
+
+pipeline_tmp, X_test_tmp, y_test_tmp, y_pred_tmp, y_pred_proba_tmp = logistic_regression_predict(
+    df, continuous_tmp, categorical_with_controls_tmp,
+    test_size=TEST_SIZE, random_state=RANDOM_STATE
+)
+
+auc = round(roc_auc_score(y_test_tmp, y_pred_proba_tmp), 2)
+cm = confusion_matrix(y_test_tmp, y_pred_tmp)
+tn, fp, fn, tp = [int(x) for x in cm.ravel()]
+recall = int(tp / (tp + fn) * 100)
+```
+
+```{python}
+#| echo: false
+#| output: asis
+print(f'''<div class="kpi-container">
+
+<div class="kpi-box">
+<div class="kpi-label">Employés analysés</div>
+<div class="kpi-value">{n_total_employees}</div>
+</div>
+
+<div class="kpi-box warning">
+<div class="kpi-label">Taux d'attrition</div>
+<div class="kpi-value">{attrition_rate}%</div>
+<div class="kpi-delta negative">{n_departures} départs</div>
+</div>
+
+<div class="kpi-box danger">
+<div class="kpi-label">Coût moyen par départ</div>
+<div class="kpi-value">{fmt(cost_per_avg)}€</div>
+<div class="kpi-delta negative">[{cost_per_min // 1000}K€ — {cost_per_max // 1000}K€]</div>
+</div>
+
+<div class="kpi-box success">
+<div class="kpi-label">Départs détectés</div>
+<div class="kpi-value">{recall}%</div>
+<div class="kpi-delta positive">{tp} sur {tp + fn}</div>
+</div>
+
+</div>''')
+```
+
+L'analyse des données RH de Meridian Pharma révèle un taux d'attrition de **`{python} attrition_rate`%**, supérieur au seuil d'alerte de 15% habituellement retenu en gestion des ressources humaines.
+
+Deux facteurs dominent le risque de départ : les **heures supplémentaires** et les **déplacements fréquents**, qui multiplient chacun le risque par plus de 5. À l'inverse, l'**implication**, la **satisfaction** et les **stock-options** constituent les principaux leviers de rétention.
+
+Le modèle prédictif identifie **`{python} tp`** départs sur **`{python} tp + fn`** réels, permettant de cibler les actions de rétention sur les employés les plus à risque. Le coût évité par départ prévenu est estimé entre **`{python} fmt(cost_per_min)`€** et **`{python} fmt(cost_per_max)`€**.

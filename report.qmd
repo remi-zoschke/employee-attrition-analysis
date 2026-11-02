@@ -87,6 +87,8 @@ labels_fr = {
 }
 ```
 
+{{< include sections/_executive-summary.qmd >}}
+
 {{< include sections/_data-exploration.qmd >}}
 
 {{< include sections/_analysis.qmd >}}
