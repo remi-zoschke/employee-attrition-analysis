@@ -4,6 +4,8 @@ subtitle: "{{< meta params.period >}} — {{< meta params.client_name >}}"
 author: "Rémi Zoschke"
 date: "2026-07-15"
 date-format: "DD MMMM YYYY"
+title-block-banner: true
+title-block-banner-color: "white"
 jupyter: employee-attrition-analysis
 params:
   client_name: "Meridian Pharma"
@@ -14,6 +16,19 @@ params:
 #| tags: [parameters]
 from src.config import PROCESSED_DATA_PATH
 data_file = PROCESSED_DATA_PATH
+```
+
+```{python}
+#| echo: false
+#| output: asis
+import base64
+from pathlib import Path
+
+logo_path = Path("assets/logo.png")
+if logo_path.exists():
+    with open(logo_path, "rb") as f:
+        logo_b64 = base64.b64encode(f.read()).decode()
+    print(f'<div id="report-logo"><img src="data:image/png;base64,{logo_b64}" alt="Meridian Pharma"></div>')
 ```
 
 ```{python}

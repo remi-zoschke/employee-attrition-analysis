@@ -15,6 +15,7 @@ format:
     number-sections: true
     code-fold: true
     code-tools: true
+    logo: assets/logo.png
     embed-resources: true
   
 execute:

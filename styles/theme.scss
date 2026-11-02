@@ -4,6 +4,38 @@ $font-size-root: 17.5px;
 
 /*-- scss:rules --*/
 
+/* Header / Banner */
+.quarto-title-banner {
+  background-color: #2C5282 !important;
+}
+
+.quarto-title-block {
+  padding-bottom: 0 !important;
+  margin-bottom: -10px !important;
+}
+
+.quarto-title-meta {
+  padding-top: 0 !important;
+  margin-top: -20px !important;
+}
+
+/* Logo */
+#report-logo {
+  position: absolute;
+  top: 30px;
+  left: 5%;
+  z-index: 1000;
+  height: 0;
+  overflow: visible;
+}
+
+#report-logo img {
+  width: 12vw;
+  min-width: 120px;
+  max-width: 200px;
+}
+
+/* KPI Cards */
 .kpi-container {
   display: flex;
   gap: 20px;
