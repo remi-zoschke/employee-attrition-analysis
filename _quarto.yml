@@ -7,6 +7,7 @@ project:
 
 format:
   html:
+    output-file: index.html
     theme: [cosmo, styles/theme.scss]
     lang: fr
     toc: true
@@ -17,7 +18,7 @@ format:
     code-tools: true
     logo: assets/logo.png
     embed-resources: true
-  
+
 execute:
   echo: false
   warning: false
